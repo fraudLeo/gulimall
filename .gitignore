@@ -17,9 +17,9 @@ buildNumber.properties
 .classpath
 
 
-**/mvnw
-**/mvnw.cmd
-**/.mvn
-**/targer/
+*/mvnw
+*/mvnw.cmd
+*/.mvn
+*/targer/
 .idea
-**/.gitignore
+*/.gitignore
