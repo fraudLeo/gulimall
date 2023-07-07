@@ -1,6 +1,8 @@
 package com.leo.gulimall.coupon.controller;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -86,5 +88,10 @@ public class CouponController {
 
         return R.ok();
     }
-
+    @RequestMapping("/member/list")
+    public R memberCoupons() {
+        CouponEntity couponEntity = new CouponEntity();
+        couponEntity.setCouponName("劳斯莱斯五元减免券");
+        return R.ok().put("coupons",Arrays.asList(couponEntity));
+    }
 }
