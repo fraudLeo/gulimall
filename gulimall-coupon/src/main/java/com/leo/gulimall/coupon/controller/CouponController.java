@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,10 +31,24 @@ import com.leo.common.utils.R;
  * @date 2023-07-06 17:23:52
  */
 @RestController
+@Slf4j
+@RefreshScope
 @RequestMapping("coupon/coupon")
 public class CouponController {
     @Autowired
     private CouponService couponService;
+
+    @Value("${user.username}")
+    private String realName;
+
+    @Value("${user.nickname}")
+    private String nickName;
+
+    @RequestMapping("/test/nacos/config")
+    public R testNacosConfig() {
+        log.info("realName:{},nickName:{}",realName,nickName);
+        return R.ok().put("realname:",realName).put("nickname:",nickName);
+    }
 
     /**
      * 列表
