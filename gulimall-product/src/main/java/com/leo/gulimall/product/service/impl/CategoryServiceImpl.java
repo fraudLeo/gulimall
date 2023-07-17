@@ -16,6 +16,7 @@ import com.leo.common.utils.Query;
 import com.leo.gulimall.product.dao.CategoryDao;
 import com.leo.gulimall.product.entity.CategoryEntity;
 import com.leo.gulimall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("categoryService")
@@ -30,11 +31,11 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
                 new Query<CategoryEntity>().getPage(params),
                 new QueryWrapper<CategoryEntity>()
         );
-
         return new PageUtils(page);
     }
 
     @Override
+//    @Transactional
     public List<CategoryEntity> listWithTree() {
 
         List<CategoryEntity> categoryEntities = categoryDao.selectList(null);
@@ -53,6 +54,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     @Override
+//    @Transactional
     public void removeMenuByIds(List<Long> asList) {
         //TODO 检查当前待删除字段是否被引用
 

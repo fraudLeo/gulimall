@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 ////import org.apache.shiro.authz.annotation.RequiresPermissions;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,7 @@ import com.leo.common.utils.R;
  * @date 2023-07-06 14:58:00
  */
 @RestController
+@Slf4j
 @RequestMapping("product/category")
 public class CategoryController {
     @Autowired
@@ -39,7 +41,7 @@ public class CategoryController {
 //    //@RequiresPermissions("product:category:list")
     public R list(){
        List<CategoryEntity> entities = categoryService.listWithTree();
-
+        System.out.println(entities.get(0).getChildren().toString());
         return R.ok().put("page",entities);
     }
 
@@ -52,7 +54,7 @@ public class CategoryController {
     public R info(@PathVariable("catId") Long catId){
 		CategoryEntity category = categoryService.getById(catId);
 
-        return R.ok().put("category", category);
+        return R.ok().put("data", category);
     }
 
     /**
@@ -65,6 +67,18 @@ public class CategoryController {
 
         return R.ok();
     }
+
+    /**
+     * 批量修改(排序)
+     */
+    @RequestMapping("/update/sort")
+//    @RequiresPermissions("product:category:update")
+    public R updateSort(@RequestBody CategoryEntity[] category){
+        categoryService.updateBatchById(Arrays.asList(category));
+        return R.ok();
+    }
+
+
 
     /**
      * 修改

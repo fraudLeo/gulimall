@@ -11,7 +11,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 123456
-    url: jdbc:mysql://1.117.167.241:3306/gulimall_wms?useSSL=false
+    url: jdbc:mysql://1.117.167.241:3306/gulimall?useSSL=false
 mybatis-plus:
   #  *的意思是不仅是当前包路径下的mapper包扫描，而且所有的包都会去扫描
   mapper-locations: classpath:/mapper/**/*.xml
