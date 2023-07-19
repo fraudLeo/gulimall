@@ -1,21 +1,20 @@
 package com.leo.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.product.entity.BrandEntity;
 import com.leo.gulimall.product.service.BrandService;
 import com.leo.common.utils.PageUtils;
 import com.leo.common.utils.R;
 
+import javax.validation.Valid;
 
 
 /**
@@ -57,9 +56,21 @@ public class BrandController {
     /**
      * 保存
      */
-    @RequestMapping("/save")
+    @PostMapping("/save")
     //@RequiresPermissions("product:brand:save")
-    public R save(@RequestBody BrandEntity brand){
+    //校验@Valid后紧跟BindingResult可以获取校验下来的结果
+    public R save(@Valid @RequestBody BrandEntity brand/*, BindingResult result*/){
+
+        /*if(result.hasErrors()) {
+            HashMap<String,String> map = new HashMap<>();
+            result.getFieldErrors().forEach((item)-> {
+                String message = item.getDefaultMessage();
+                String field = item.getField();
+                map.put(field,message);
+            });
+            return R.error(400,"提交的数据不合法").put("data",map);
+        }*/
+
 		brandService.save(brand);
 
         return R.ok();
