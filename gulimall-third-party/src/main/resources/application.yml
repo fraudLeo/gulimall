@@ -1,0 +1,7 @@
+tencent:
+  cos:
+    file:
+      secretid: AKIDTI7pLrFk3C8rtmX6XntoZ9zfM9nGDl7H
+      secretkey: 2qV2MSLcuFUbXHqDNJ3f6RaXIqDQTK3d
+      region: ap-nanjing
+      bucketname: gulimall-1307858615
