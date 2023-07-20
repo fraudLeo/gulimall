@@ -5,8 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.leo.common.valid.AddGroup;
+import com.leo.common.valid.UpdateGroup;
+import com.leo.common.valid.UpdateStatusGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.product.entity.BrandEntity;
@@ -59,7 +64,8 @@ public class BrandController {
     @PostMapping("/save")
     //@RequiresPermissions("product:brand:save")
     //校验@Valid后紧跟BindingResult可以获取校验下来的结果
-    public R save(@Valid @RequestBody BrandEntity brand/*, BindingResult result*/){
+    //@Validated()-->指定校验分组
+    public R save(@Validated(AddGroup.class) @RequestBody BrandEntity brand/*, BindingResult result*/) throws MethodArgumentNotValidException {
 
         /*if(result.hasErrors()) {
             HashMap<String,String> map = new HashMap<>();
@@ -81,8 +87,21 @@ public class BrandController {
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:brand:update")
-    public R update(@RequestBody BrandEntity brand){
+    public R update(@Validated(UpdateGroup.class) @RequestBody BrandEntity brand){
 		brandService.updateById(brand);
+
+        return R.ok();
+    }
+
+    /**
+     * 修改状态
+     * @param brand
+     * @return
+     */
+    @RequestMapping("/update/status")
+    //@RequiresPermissions("product:brand:update")
+    public R updateStatus(@Validated(UpdateStatusGroup.class) @RequestBody BrandEntity brand){
+        brandService.updateById(brand);
 
         return R.ok();
     }
