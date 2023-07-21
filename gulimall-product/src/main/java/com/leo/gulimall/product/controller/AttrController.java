@@ -4,12 +4,11 @@ import java.util.Arrays;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.leo.gulimall.product.vo.AttrRespVo;
+import com.leo.gulimall.product.vo.AttrVo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.product.entity.AttrEntity;
 import com.leo.gulimall.product.service.AttrService;
@@ -27,10 +26,22 @@ import com.leo.common.utils.R;
  */
 @RestController
 @RequestMapping("product/attr")
+@Slf4j
 public class AttrController {
     @Autowired
     private AttrService attrService;
 
+
+
+
+
+    @GetMapping("/base/list/{catelogId}")
+    public R baseAttrList(@RequestParam Map<String,Object> params,@PathVariable("catelogId") Long catelogId) {
+       PageUtils page = attrService.queryBaseAttrPage(params,catelogId);
+        System.out.println("-------------");
+
+        return R.ok().put("page", page);
+    }
     /**
      * 列表
      */
@@ -49,9 +60,8 @@ public class AttrController {
     @RequestMapping("/info/{attrId}")
     //@RequiresPermissions("product:attr:info")
     public R info(@PathVariable("attrId") Long attrId){
-		AttrEntity attr = attrService.getById(attrId);
-
-        return R.ok().put("attr", attr);
+		AttrRespVo attrRespVo = attrService.getAttrInfo(attrId);
+        return R.ok().put("attr", attrRespVo);
     }
 
     /**
@@ -59,8 +69,8 @@ public class AttrController {
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:attr:save")
-    public R save(@RequestBody AttrEntity attr){
-		attrService.save(attr);
+    public R save(@RequestBody AttrVo arrtVo){
+		attrService.saveAttr(arrtVo);
 
         return R.ok();
     }
