@@ -1,5 +1,6 @@
 package com.leo.gulimall.product.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ import com.leo.gulimall.product.entity.CategoryEntity;
 import com.leo.gulimall.product.service.CategoryService;
 import org.springframework.transaction.annotation.Transactional;
 
-
+@Slf4j
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
 
@@ -65,15 +66,18 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     @Override
     public Long[] findCatelogPath(Long attrGroupId1) {
-        ArrayList<Long> paths = new ArrayList<>();
+        List<Long> paths = new ArrayList<>();
         List<Long> parentPath = findParentPath(attrGroupId1, paths);
         Collections.reverse(parentPath);
+
         return paths.toArray(new Long[parentPath.size()]);
     }
 
     private List<Long> findParentPath(Long catelogId,List<Long> paths) {
         paths.add(catelogId);
         CategoryEntity byId = this.getById(catelogId);
+//        log.info("路径:{}",paths);
+
         if (byId.getParentCid()!=0) {
             findParentPath(byId.getParentCid(),paths);
         }

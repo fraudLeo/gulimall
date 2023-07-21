@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.leo.gulimall.product.entity.BrandEntity;
 import com.leo.gulimall.product.service.BrandService;
 
+import com.leo.gulimall.product.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.Response;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -27,6 +29,15 @@ public class GulimallProductApplicationTests {
 
     @Autowired
     BrandService brandService;
+    @Autowired
+    CategoryService categoryService;
+
+    @Test
+    public void testFindPath() {
+        Long[] catelogPath = categoryService.findCatelogPath(255L);
+        log.info("完整路径:{}", Arrays.asList(catelogPath));
+    }
+
 
     @Test
     void contextLoads() {
