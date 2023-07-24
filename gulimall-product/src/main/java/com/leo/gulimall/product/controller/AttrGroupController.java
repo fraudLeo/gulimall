@@ -1,16 +1,16 @@
 package com.leo.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.leo.gulimall.product.entity.AttrEntity;
+import com.leo.gulimall.product.service.AttrService;
 import com.leo.gulimall.product.service.CategoryService;
+import com.leo.gulimall.product.vo.AttrGroupRelationVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.product.entity.AttrGroupEntity;
 import com.leo.gulimall.product.service.AttrGroupService;
@@ -34,6 +34,17 @@ public class AttrGroupController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private AttrService attrService;
+
+    @GetMapping("/{attrGroupId}/attr/relation")
+    public R attrRelation(@PathVariable("attrGroupId") Long attrGroupId) {
+        List<AttrEntity> entities = attrService.getRelationAttr(attrGroupId);
+        return R.ok().put("data",entities);
+    }
+
+
 
     /**
      * 列表
@@ -93,4 +104,20 @@ public class AttrGroupController {
         return R.ok();
     }
 
+    /**
+     * 删除关联
+     */
+    @PostMapping("/attr/relation/delete")
+    public R deleteRelation(@RequestBody AttrGroupRelationVo[] vos) {
+        attrService.deleteRelation(vos);
+        return R.ok();
+
+    }
+
+    @GetMapping("/{attrGroupId}/noattr/relation")
+    public R attrNoRelation(@PathVariable("attrGroupId") Long attrGroupId,
+                            @RequestParam Map<String,Object> params) {
+        PageUtils page = attrService.getNoRelationAttr(params,attrGroupId);
+        return R.ok().put("page",page);
+    }
 }
