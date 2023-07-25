@@ -6,6 +6,7 @@ import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
 import com.leo.gulimall.product.entity.AttrEntity;
+import com.leo.gulimall.product.service.AttrAttrgroupRelationService;
 import com.leo.gulimall.product.service.AttrService;
 import com.leo.gulimall.product.service.CategoryService;
 import com.leo.gulimall.product.vo.AttrGroupRelationVo;
@@ -37,6 +38,18 @@ public class AttrGroupController {
 
     @Autowired
     private AttrService attrService;
+
+    @Autowired
+    private AttrAttrgroupRelationService relationService;
+
+    @PostMapping("/attr/relation")
+    public R addRelation(@RequestBody AttrGroupRelationVo[] vos) {
+        relationService.saveBatch(vos);
+        return  R.ok();
+    }
+
+
+
 
     @GetMapping("/{attrGroupId}/attr/relation")
     public R attrRelation(@PathVariable("attrGroupId") Long attrGroupId) {

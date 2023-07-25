@@ -7,11 +7,7 @@ import java.util.Map;
 ////import org.apache.shiro.authz.annotation.RequiresPermissions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.product.entity.CategoryEntity;
 import com.leo.gulimall.product.service.CategoryService;
@@ -33,6 +29,8 @@ import com.leo.common.utils.R;
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
+
+
 
     /**
      * 查出所有的分类，以及子分类，用树形结构组装

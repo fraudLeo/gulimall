@@ -110,7 +110,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
                 AttrAttrgroupRelationEntity attr_id =
                         relationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>()
                                 .eq("attr_id", attrEntity.getAttrId()));
-                if (attr_id != null) {
+                if (attr_id != null&& attr_id.getAttrGroupId()!=null) {
                     attrRespVo.setGroupName(attrGroupDao.selectById(attr_id.getAttrGroupId()).getAttrGroupName());
                 }
             }

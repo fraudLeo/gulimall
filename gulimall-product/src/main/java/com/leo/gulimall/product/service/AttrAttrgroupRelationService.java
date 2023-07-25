@@ -3,6 +3,7 @@ package com.leo.gulimall.product.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.leo.common.utils.PageUtils;
 import com.leo.gulimall.product.entity.AttrAttrgroupRelationEntity;
+import com.leo.gulimall.product.vo.AttrGroupRelationVo;
 
 import java.util.Map;
 
@@ -16,5 +17,7 @@ import java.util.Map;
 public interface AttrAttrgroupRelationService extends IService<AttrAttrgroupRelationEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    void saveBatch(AttrGroupRelationVo[] vos);
 }
 
