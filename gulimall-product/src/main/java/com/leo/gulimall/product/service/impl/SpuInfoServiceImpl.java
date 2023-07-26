@@ -8,10 +8,12 @@ import com.leo.gulimall.product.entity.*;
 import com.leo.gulimall.product.feign.CouponFeignService;
 import com.leo.gulimall.product.service.*;
 import com.leo.gulimall.product.vo.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -95,8 +97,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             valueEntity.setSpuId(spuInfoEntity.getId());
             return valueEntity;
         }).collect(Collectors.toList());
-
         attrValueService.saveProductAttr(collect);
+
         //插入:  保存spu的积分信息-->sms_spu_sms_spu_bounds
         Bounds bounds = vo.getBounds();
         SpuBoundTo spuBoundTo = new SpuBoundTo();
@@ -110,8 +112,9 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         // 5. 保存当前spu对应的所有sku信息
             //5.1 sku的基本信息-->pms_sku_info
         List<Skus> skus = vo.getSkus();
+
         if (skus!=null &&skus.size()>0) {
-            Stream<SpuInfoEntity> spuInfoEntityStream = skus.stream().map(sku -> {
+            skus.stream().map(sku -> {
                 String defaultImg = "";
                 for (Images img : sku.getImages()) {
                     if (img.getDefaultImg() == 1) {
@@ -139,6 +142,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                     skuImagesEntity.setImgUrl(item.getImgUrl());
                     skuImagesEntity.setDefaultImg(item.getDefaultImg());
                     return skuImagesEntity;
+                }).filter(item-> {
+                    return !StringUtils.isEmpty(item.getImgUrl());
                 }).collect(Collectors.toList());
             //5.2 sku的图片信息-->pms_sku_images
                 skuImagesService.saveBatch(collect1);
@@ -157,9 +162,13 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 SkuReductionTo skuReductionTo = new SkuReductionTo();
                 BeanUtils.copyProperties(sku,skuReductionTo);
                 skuReductionTo.setSkuId(skuId);
-                R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
-                if (r1.getCode()!=0) {
-                    log.error("远程保存sku优惠信息失败");
+                if (skuReductionTo.getFullCount()>0 || skuReductionTo.getFullPrice().compareTo(new BigDecimal(0))==1) {
+                    R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
+//                System.out.println(r1+"----------------");
+                    if (r1.getCode()!=0) {
+                        log.error("远程保存sku优惠信息失败");
+                    }
+
                 }
 
                 return spuInfoEntity;
@@ -177,6 +186,37 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public void saveSpuInfoDesc(SpuInfoDescEntity spuInfoDescEntity) {
 
+    }
+
+    @Override
+    public PageUtils queryPageByCondition(Map<String, Object> params) {
+        QueryWrapper<SpuInfoEntity> wrapper = new QueryWrapper<>();
+        String key = (String) params.get("key");
+        if (!StringUtils.isEmpty(key)) {
+            wrapper.and(w-> {
+                return w.eq("id",key).or().like("spu_name",key);
+            });
+        }
+        String status = (String) params.get("status");
+        if (!StringUtils.isEmpty(status)) {
+            wrapper.eq("publish_status",status);
+        }
+        String brandId = (String) params.get("brandId");
+        if (!StringUtils.isEmpty(brandId)) {
+            wrapper.eq("brand_id",brandId);
+        }
+        String catelogId = (String) params.get("catelogId");
+        if (!StringUtils.isEmpty(catelogId)) {
+
+        }
+
+        IPage<SpuInfoEntity> page = this.page(
+                new Query<SpuInfoEntity>().getPage(params),
+                wrapper
+        );
+
+
+        return new PageUtils(page);
     }
 
 }
