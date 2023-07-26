@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 //注册
 @EnableDiscoveryClient
 //开启调用(能够远程调用)
-@EnableFeignClients(basePackages = {"com.leo.gulimall.member.feign"})
+@EnableFeignClients
 public class GulimallMemberApplication {
 
     public static void main(String[] args) {
