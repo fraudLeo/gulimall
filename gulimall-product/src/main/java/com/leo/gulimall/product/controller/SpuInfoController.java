@@ -40,6 +40,7 @@ public class SpuInfoController {
     public R list(@RequestParam Map<String, Object> params){
         PageUtils page = spuInfoService.queryPageByCondition(params);
 
+
         return R.ok().put("page", page);
     }
 

@@ -1,15 +1,15 @@
 package com.leo.gulimall.ware.controller;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.leo.gulimall.ware.vo.MergeVo;
+import com.leo.gulimall.ware.vo.PurchaseDoneVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.leo.gulimall.ware.entity.PurchaseEntity;
 import com.leo.gulimall.ware.service.PurchaseService;
@@ -30,6 +30,30 @@ import com.leo.common.utils.R;
 public class PurchaseController {
     @Autowired
     private PurchaseService purchaseService;
+
+    @PostMapping("/done")
+    public R finish(@RequestBody PurchaseDoneVo doneVo) {
+        purchaseService.done(doneVo);
+        return R.ok();
+    }
+
+
+
+    @PostMapping("/received")
+    public R received(@RequestBody List<Long> ids) {
+        purchaseService.received(ids);
+        return R.ok();
+    }
+
+    @RequestMapping("/unreceive/list")
+    public R unReceiveList(@RequestParam Map<String, Object> params) {
+        PageUtils page = purchaseService.queryPageUnreceive(params);
+
+
+        return R.ok().put("page",page);
+    }
+
+
 
     /**
      * 列表
@@ -57,9 +81,10 @@ public class PurchaseController {
     /**
      * 保存
      */
-    @RequestMapping("/save")
+    @PostMapping("/save")
     //@RequiresPermissions("ware:purchase:save")
     public R save(@RequestBody PurchaseEntity purchase){
+        purchase.setUpdateTime(new Date());
 		purchaseService.save(purchase);
 
         return R.ok();
@@ -87,4 +112,11 @@ public class PurchaseController {
         return R.ok();
     }
 
+
+    @PostMapping("/merge")
+    public R merge(@RequestBody MergeVo vo) {
+
+        purchaseService.mergePurchase(vo);
+        return R.ok();
+    }
 }

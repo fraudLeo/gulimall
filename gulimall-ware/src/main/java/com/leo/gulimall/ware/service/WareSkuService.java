@@ -2,6 +2,7 @@ package com.leo.gulimall.ware.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.leo.common.utils.PageUtils;
+import com.leo.gulimall.ware.entity.PurchaseDetailEntity;
 import com.leo.gulimall.ware.entity.WareSkuEntity;
 
 import java.util.Map;
@@ -16,5 +17,8 @@ import java.util.Map;
 public interface WareSkuService extends IService<WareSkuEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+
+    void addStock(Long skuId, Long wareId, Integer skuNum);
 }
 

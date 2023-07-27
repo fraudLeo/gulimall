@@ -8,6 +8,7 @@ import com.leo.gulimall.product.entity.*;
 import com.leo.gulimall.product.feign.CouponFeignService;
 import com.leo.gulimall.product.service.*;
 import com.leo.gulimall.product.vo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("spuInfoService")
+@Slf4j
 public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> implements SpuInfoService {
 
     @Autowired
@@ -192,29 +194,39 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     public PageUtils queryPageByCondition(Map<String, Object> params) {
         QueryWrapper<SpuInfoEntity> wrapper = new QueryWrapper<>();
         String key = (String) params.get("key");
+//        System.out.println("----1----");
+        log.info(key);
         if (!StringUtils.isEmpty(key)) {
             wrapper.and(w-> {
                 return w.eq("id",key).or().like("spu_name",key);
             });
         }
+//        System.out.println("----2----");
         String status = (String) params.get("status");
         if (!StringUtils.isEmpty(status)) {
             wrapper.eq("publish_status",status);
         }
+//        System.out.println("----3----");
         String brandId = (String) params.get("brandId");
         if (!StringUtils.isEmpty(brandId)) {
             wrapper.eq("brand_id",brandId);
         }
+
+//        System.out.println("----4----");
         String catelogId = (String) params.get("catelogId");
         if (!StringUtils.isEmpty(catelogId)) {
-
+            //数据库文件拼写都是错的
+            wrapper.eq("catalog_id",catelogId);
         }
-
+//        System.out.println("----5----");
+        //在下面出现了10000异常,但是控制台没有抛出,逆天
         IPage<SpuInfoEntity> page = this.page(
                 new Query<SpuInfoEntity>().getPage(params),
                 wrapper
         );
-
+        System.out.println("--------");
+        System.out.println(page.getSize());
+        System.out.println("--------");
 
         return new PageUtils(page);
     }
