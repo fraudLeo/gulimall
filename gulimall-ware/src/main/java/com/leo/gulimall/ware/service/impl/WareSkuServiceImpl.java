@@ -2,6 +2,7 @@ package com.leo.gulimall.ware.service.impl;
 
 import com.leo.common.utils.R;
 import com.leo.gulimall.ware.feign.ProductFeignService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("wareSkuService")
+@Slf4j
 public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> implements WareSkuService {
 
 
@@ -69,9 +71,8 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                     wareSkuEntity.setSkuName((String) data.get("skuName"));
                 }
             } catch(Exception e) {
-
+                System.out.println(e);
             }
-
             this.baseMapper.insert(wareSkuEntity);
         } else {
             this.baseMapper.addStock(skuId,wareId,skuNum);

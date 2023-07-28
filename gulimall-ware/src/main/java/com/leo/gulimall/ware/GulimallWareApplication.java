@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableTransactionManagement
-@EnableFeignClients
+@EnableFeignClients(basePackages = {"com.leo.gulimall.ware.feign"})
 public class GulimallWareApplication {
 
     public static void main(String[] args) {
