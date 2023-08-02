@@ -1,5 +1,6 @@
 package com.leo.gulimall.product.service.impl;
 
+import com.leo.common.constant.ProductConstant;
 import com.leo.common.to.SkuEsModel;
 import com.leo.common.to.SkuReductionTo;
 import com.leo.common.to.SpuBoundTo;
@@ -7,6 +8,7 @@ import com.leo.common.utils.R;
 import com.leo.gulimall.product.dao.SpuInfoDescDao;
 import com.leo.gulimall.product.entity.*;
 import com.leo.gulimall.product.feign.CouponFeignService;
+import com.leo.gulimall.product.feign.SearchFeignService;
 import com.leo.gulimall.product.feign.WareFeignService;
 import com.leo.gulimall.product.service.*;
 import com.leo.gulimall.product.vo.*;
@@ -66,6 +68,9 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Autowired
     BrandService brandService;
+
+    @Autowired
+    SearchFeignService searchFeignService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -126,6 +131,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         if (skus!=null &&skus.size()>0) {
             skus.stream().map(sku -> {
                 String defaultImg = "";
+                System.out.println("----------------?");
                 for (Images img : sku.getImages()) {
                     if (img.getDefaultImg() == 1) {
                         defaultImg = img.getImgUrl();
@@ -135,7 +141,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
                 SkuInfoEntity skuInfoEntity = new SkuInfoEntity();
                 BeanUtils.copyProperties(sku, skuInfoEntity);
-
+                System.out.println(skuInfoEntity);
                 skuInfoEntity.setBrandId(spuInfoEntity.getBrandId());
                 skuInfoEntity.setCatalogId(spuInfoEntity.getCatalogId());
                 skuInfoEntity.setSaleCount(0L);
@@ -269,17 +275,41 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         }).collect(Collectors.toList());
 
         //TODO 1. 发送远程调用,库存系统查询是否还是有库存
-        List<SkuHasStockVo> skusHasStock = wareFeignService.getSkusHasStock(skuIdList);
-        hass
+
+        Map<Long, Boolean> stockMap = null;
+        //远程调用失败的情况
+        try{
+            List<SkuHasStockVo> skusHasStock = wareFeignService.getSkusHasStock(skuIdList);
+            //下面的就是一个sku对一个布尔值,反映的是当前id下有无库存,之后只要到这个里面来进行查询就可以了,这样是只查询了一次,但是如果放到下面的部分,
+            //就是要多进行n次查询,到时候的时间复杂度就是n^2,所以调了出来
+
+            stockMap = skusHasStock.stream()
+                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, item -> item.getHasStock()));
+        } catch(Exception e) {
+            log.error("库存服务查询异常,{}",e);
+
+        }
+
         //2. 封装每一个sku的信息(?存疑,这里不就一个嘛
+        /**
+         * 这里如果不用finalStockMap就会报错
+         * 这里为什么报错：Lambda表达式可能在另一个线程中执行，如果这个局部变量在外部或者Lambda内部或者同时发生修改，那么可能出现线程安全问题。
+         * 所以需要设置局部变量为final或者为effectively final的，来防止发生修改操作
+         */
+        Map<Long, Boolean> finalStockMap = stockMap;
         List<SkuEsModel> upProducts = skus.stream().map(sku-> {
             SkuEsModel esModel = new SkuEsModel();
             BeanUtils.copyProperties(sku,esModel);
             esModel.setSkuPrice(sku.getPrice());
             esModel.setSkuImg(sku.getSkuDefaultImg());
 
+            //设置库存信息
+            if (finalStockMap ==null) {
+                esModel.setHasStock(true);
+            } else {
+                esModel.setHasStock(finalStockMap.get(sku.getSkuId()));
+            }
 
-            esModel.setHasStock(false);
             //TODO 2. 热点评分 默认新商品0,(这里先统一默认为0,之后逻辑再进行改变)
             esModel.setHotScore(0L);
             //TODO 3. 查询品牌的分类和信息的名字
@@ -296,6 +326,16 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         }).collect(Collectors.toList());
 
         //TODO 5. 发给es进行保存,之后查询所有的数据就交给es,即 search微服务进行处理
+        R r = searchFeignService.productStatusUp(upProducts);
+        if(r.getCode()==0) {
+            //远程调用成功
+            //TODO 6.修改spu的状态(当前spu下所有的sku)-->上架
+            baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
+        } else {
+            //远程调用失败
+            //TODO 重复调用?接口的幂等性?重试机制?xxx?
+        }
+
     }
 
 }
