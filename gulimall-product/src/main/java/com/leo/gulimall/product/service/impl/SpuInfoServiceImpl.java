@@ -84,64 +84,67 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Transactional
     @Override
     public void saveSpuInfo(SpuSaveVo vo) {
-
-        //1. 保存spu基本信息-->pms_spu_info
+        //1、保存spu基本信息：pms_spu_info
         SpuInfoEntity spuInfoEntity = new SpuInfoEntity();
         BeanUtils.copyProperties(vo,spuInfoEntity);
         spuInfoEntity.setCreateTime(new Date());
         spuInfoEntity.setUpdateTime(new Date());
         this.saveBaseSpuInfo(spuInfoEntity);
-        //2. 保存spu的描述图片-->pms_spu_info_desc
+
+        //2、保存spu的描述图片：pms_spu_info_desc
         List<String> decript = vo.getDecript();
         SpuInfoDescEntity spuInfoDescEntity = new SpuInfoDescEntity();
         spuInfoDescEntity.setSpuId(spuInfoEntity.getId());
         spuInfoDescEntity.setDecript(String.join(",",decript));
         spuInfoDescService.saveSpuInfoDesc(spuInfoDescEntity);
-        //3. 保存spu的图片集-->pms_spu_images
+
+        //3、保存spu的图片集：pms_spu_images
         List<String> images = vo.getImages();
         imagesService.saveImages(spuInfoEntity.getId(),images);
-        //4. 保存spu的规格-->pms_product_attr_value
+
+        //4、保存spu的规格参数：pms_product_attr_value
         List<BaseAttrs> baseAttrs = vo.getBaseAttrs();
         List<ProductAttrValueEntity> collect = baseAttrs.stream().map(attr -> {
             ProductAttrValueEntity valueEntity = new ProductAttrValueEntity();
             valueEntity.setAttrId(attr.getAttrId());
+
+            //查询attr属性名
             AttrEntity byId = attrService.getById(attr.getAttrId());
+
             valueEntity.setAttrName(byId.getAttrName());
             valueEntity.setAttrValue(attr.getAttrValues());
             valueEntity.setQuickShow(attr.getShowDesc());
             valueEntity.setSpuId(spuInfoEntity.getId());
             return valueEntity;
         }).collect(Collectors.toList());
-        attrValueService.saveProductAttr(collect);
+       attrValueService.saveProductAttr(collect);
 
-        //插入:  保存spu的积分信息-->sms_spu_sms_spu_bounds
+
+        //5、保存spu的积分信息：gulimall_sms--->sms_spu_bounds
         Bounds bounds = vo.getBounds();
         SpuBoundTo spuBoundTo = new SpuBoundTo();
         BeanUtils.copyProperties(bounds,spuBoundTo);
         spuBoundTo.setSpuId(spuInfoEntity.getId());
         R r = couponFeignService.saveSpuBounds(spuBoundTo);
-        if (r.getCode()!=0) {
+
+        if (r.getCode() != 0) {
             log.error("远程保存spu积分信息失败");
         }
 
-        // 5. 保存当前spu对应的所有sku信息
-            //5.1 sku的基本信息-->pms_sku_info
+        //5、保存当前spu对应的所有sku信息：pms_sku_info
+        //5、1）、sku的基本信息:pms_sku_info
         List<Skus> skus = vo.getSkus();
-
-        if (skus!=null &&skus.size()>0) {
-            skus.stream().map(sku -> {
+        if(skus!=null && skus.size()>0){
+            skus.forEach(item->{
                 String defaultImg = "";
-                System.out.println("----------------?");
-                for (Images img : sku.getImages()) {
-                    if (img.getDefaultImg() == 1) {
-                        defaultImg = img.getImgUrl();
-
+                for (Images image : item.getImages()) {
+                    if(image.getDefaultImg() == 1){
+                        defaultImg = image.getImgUrl();
                     }
                 }
 
                 SkuInfoEntity skuInfoEntity = new SkuInfoEntity();
-                BeanUtils.copyProperties(sku, skuInfoEntity);
-                System.out.println(skuInfoEntity);
+                BeanUtils.copyProperties(item,skuInfoEntity);
                 skuInfoEntity.setBrandId(spuInfoEntity.getBrandId());
                 skuInfoEntity.setCatalogId(spuInfoEntity.getCatalogId());
                 skuInfoEntity.setSaleCount(0L);
@@ -151,46 +154,43 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
                 Long skuId = skuInfoEntity.getSkuId();
 
-
-                List<SkuImagesEntity> collect1 = sku.getImages().stream().map(item -> {
+                List<SkuImagesEntity> imagesEntities = item.getImages().stream().map(img -> {
                     SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
                     skuImagesEntity.setSkuId(skuId);
-                    skuImagesEntity.setImgUrl(item.getImgUrl());
-                    skuImagesEntity.setDefaultImg(item.getDefaultImg());
+                    skuImagesEntity.setImgUrl(img.getImgUrl());
+                    skuImagesEntity.setDefaultImg(img.getDefaultImg());
                     return skuImagesEntity;
-                }).filter(item-> {
-                    return !StringUtils.isEmpty(item.getImgUrl());
+                }).filter(entity -> {
+                    //返回true就是需要，false就是剔除
+                    return !StringUtils.isEmpty(entity.getImgUrl());
                 }).collect(Collectors.toList());
-            //5.2 sku的图片信息-->pms_sku_images
-                skuImagesService.saveBatch(collect1);
-            //5.3 sku的销售属性信息-->pms_sku_sale_attr_value
-                List<Attr> attr = sku.getAttr();
-                List<SkuSaleAttrValueEntity> collect2 = attr.stream().map(a -> {
+
+                //5、2）、sku的图片信息：pms_sku_images
+                skuImagesService.saveBatch(imagesEntities);
+
+                //5、3）、sku的销售属性：pms_sku_sale_attr_value
+                List<Attr> attr = item.getAttr();
+                List<SkuSaleAttrValueEntity> skuSaleAttrValueEntities = attr.stream().map(a -> {
                     SkuSaleAttrValueEntity skuSaleAttrValueEntity = new SkuSaleAttrValueEntity();
                     BeanUtils.copyProperties(a, skuSaleAttrValueEntity);
                     skuSaleAttrValueEntity.setSkuId(skuId);
                     return skuSaleAttrValueEntity;
                 }).collect(Collectors.toList());
 
-                skuSaleAttrValueService.saveBatch(collect2);
+                skuSaleAttrValueService.saveBatch(skuSaleAttrValueEntities);
 
-                //5.4 sku的优惠满减信息-->sms_sku_ladder\sms_sku_full_reduction\sms_member_price\
+                //5、4）、sku的优惠、满减等信息：gulimall_sms--->sms_sku_ladder、sms_sku_full_reduction、sms_member_price
                 SkuReductionTo skuReductionTo = new SkuReductionTo();
-                BeanUtils.copyProperties(sku,skuReductionTo);
+                BeanUtils.copyProperties(item,skuReductionTo);
                 skuReductionTo.setSkuId(skuId);
-                if (skuReductionTo.getFullCount()>0 || skuReductionTo.getFullPrice().compareTo(new BigDecimal(0))==1) {
+                if (skuReductionTo.getFullCount() > 0 || skuReductionTo.getFullPrice().compareTo(BigDecimal.ZERO) == 1) {
                     R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
-//                System.out.println(r1+"----------------");
-                    if (r1.getCode()!=0) {
-                        log.error("远程保存sku优惠信息失败");
+                    if (r1.getCode() != 0) {
+                        log.error("远程保存sku积分信息失败");
                     }
-
                 }
-
-                return spuInfoEntity;
             });
         }
-
 
     }
 
