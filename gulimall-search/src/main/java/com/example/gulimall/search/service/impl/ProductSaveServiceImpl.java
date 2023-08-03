@@ -20,35 +20,41 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("productSaveService")
 @Slf4j
 public class ProductSaveServiceImpl implements ProductSaveService {
 
-
     @Autowired
-    RestHighLevelClient restHighLevelClient;
+    private RestHighLevelClient esRestClient;
 
     @Override
     public boolean productStatusUp(List<SkuEsModel> skuEsModels) throws IOException {
-        //保存到es
-        //1. 建立es的索引.product,建立好映射关系
 
-        //2. 给es中保存这些数据
+//1.在es中建立索引，建立号映射关系（doc/json/product-mapping.json）
+
+        //2. 在ES中保存这些数据
         BulkRequest bulkRequest = new BulkRequest();
         for (SkuEsModel skuEsModel : skuEsModels) {
+            //构造保存请求
             IndexRequest indexRequest = new IndexRequest(EsConstant.PRODUCT_INDEX);
             indexRequest.id(skuEsModel.getSkuId().toString());
-            String s = JSONUtil.toJsonStr(skuEsModel);
-            indexRequest.source(s, XContentType.JSON);
+            String jsonString = JSONUtil.toJsonStr(skuEsModel);
+            indexRequest.source(jsonString, XContentType.JSON);
             bulkRequest.add(indexRequest);
         }
 
-        BulkResponse bulk = restHighLevelClient.bulk(bulkRequest, GulimallElasticSearchConfig.COMMON_OPTIONS);
-        //TODO 如过批量错误,
-        boolean b = bulk.hasFailures();
-        //获取错误商品
-        List<String> collect = Arrays.stream(bulk.getItems()).map(item -> item.getId()).collect(Collectors.toList());
-        log.error("商品上架错误:{}",collect);
-        return b;
+
+        BulkResponse bulk = esRestClient.bulk(bulkRequest, GulimallElasticSearchConfig.COMMON_OPTIONS);
+
+        //TODO 如果批量错误
+        boolean hasFailures = bulk.hasFailures();
+
+        List<String> collect = Arrays.asList(bulk.getItems()).stream().map(item -> {
+            return item.getId();
+        }).collect(Collectors.toList());
+
+        log.info("商品上架完成：{}",collect);
+
+        return hasFailures;
     }
 }

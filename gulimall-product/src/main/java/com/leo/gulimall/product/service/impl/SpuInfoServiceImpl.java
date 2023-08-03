@@ -238,9 +238,6 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 new Query<SpuInfoEntity>().getPage(params),
                 wrapper
         );
-        System.out.println("--------");
-        System.out.println(page.getSize());
-        System.out.println("--------");
 
         return new PageUtils(page);
     }
@@ -248,23 +245,23 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public void up(Long spuId) {
 
-
-        // 组装需要的数据
-        SkuEsModel skuEsModel = new SkuEsModel();
         //1. 查出当前spuId对应的所有sku信息
         List<SkuInfoEntity> skus = skuInfoService.getSkuBySpuId(spuId);
-        List<Long> skuIdList = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
-
+//        System.out.println("------1------");
         //TODO 4. 查询当前sku所有的规格属性
+        //这里错了,传过来的baseAttrs是null
         List<ProductAttrValueEntity> baseAttrs = attrValueService.baseAttrListforSpu(spuId);
+        if(baseAttrs.size()==0) {
+            log.error("商家数据里面的参数为空");
+            return ;
+        }
         List<Long> attrIds = baseAttrs.stream().map(attr -> {
             return attr.getAttrId();
         }).collect(Collectors.toList());
-
         List<Long> searchAttrIds = attrService.selectSearchAttrs(attrIds);
         Set<Long> idSet = new HashSet<>(searchAttrIds);
-
-        List<SkuEsModel> skuEsModels = new ArrayList<>();
+//        System.out.println("------2------");
+//        List<SkuEsModel> skuEsModels = new ArrayList<>();
         List<SkuEsModel.Attrs> attrsList = baseAttrs.stream().filter(item -> {
             //返回true就代表满足过滤器条件,不用抛弃
             return idSet.contains(item.getAttrId());
@@ -273,20 +270,23 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             BeanUtils.copyProperties(item, attrs);
             return attrs;
         }).collect(Collectors.toList());
+        List<Long> skuIdList = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
 
         //TODO 1. 发送远程调用,库存系统查询是否还是有库存
 
         Map<Long, Boolean> stockMap = null;
+//        System.out.println("------3------");
         //远程调用失败的情况
         try{
             List<SkuHasStockVo> skusHasStock = wareFeignService.getSkusHasStock(skuIdList);
+//            System.out.println("------------");
             //下面的就是一个sku对一个布尔值,反映的是当前id下有无库存,之后只要到这个里面来进行查询就可以了,这样是只查询了一次,但是如果放到下面的部分,
             //就是要多进行n次查询,到时候的时间复杂度就是n^2,所以调了出来
 
             stockMap = skusHasStock.stream()
                     .collect(Collectors.toMap(SkuHasStockVo::getSkuId, item -> item.getHasStock()));
         } catch(Exception e) {
-            log.error("库存服务查询异常,{}",e);
+            log.error("库存服务查询异常:{}",e.getMessage());
 
         }
 
@@ -327,10 +327,13 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
         //TODO 5. 发给es进行保存,之后查询所有的数据就交给es,即 search微服务进行处理
         R r = searchFeignService.productStatusUp(upProducts);
+//        System.out.println(r.getCode());
         if(r.getCode()==0) {
             //远程调用成功
             //TODO 6.修改spu的状态(当前spu下所有的sku)-->上架
-            baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
+//            System.out.println(1);
+            this.baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
+//            System.out.println("end");
         } else {
             //远程调用失败
             //TODO 重复调用?接口的幂等性?重试机制?xxx?

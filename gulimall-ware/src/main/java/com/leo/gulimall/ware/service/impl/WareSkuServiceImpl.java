@@ -54,7 +54,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
         return new PageUtils(page);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void addStock(Long skuId, Long wareId, Integer skuNum) {
 
@@ -90,13 +90,17 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
             SkuHasStockVo vo = new SkuHasStockVo();
 
             //查询当前库存的从库存量
-            long count = baseMapper.getSkuStock(sku);
+            Long count = baseMapper.getSkuStock(sku);
+//            System.out.println("------------");
+//            System.out.println(sku);
+//            System.out.println("------------");
+
             vo.setSkuId(sku);
-            vo.setHasStock(count>0);
+            vo.setHasStock(count!=null&&count>0);
 
             return vo;
         }).collect(Collectors.toList());
-        return null;
+        return collect;
     }
 
 }

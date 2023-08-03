@@ -25,14 +25,15 @@ public class ElasticSaveController {
     //上架商品
     @PostMapping("/product")
     public R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels) {
+        System.out.println("到达人生最高峰");
         boolean b = false;
         try {
             b = productSaveService.productStatusUp(skuEsModels);
         } catch (IOException e) {
-            log.error("ElasticSaveController商品上架错误:{}",e);
+            log.error("ElasticSaveController商品上架错误:{}",e.getMessage());
             return  R.error(BizCodeException.PRODUCT_UP_EXCEPTION.getCode(),BizCodeException.PRODUCT_UP_EXCEPTION.getMsg());
         }
-        if (b) {
+        if (!b) {
             return R.ok();
         } else {
             return  R.error(BizCodeException.PRODUCT_UP_EXCEPTION.getCode(),BizCodeException.PRODUCT_UP_EXCEPTION.getMsg());

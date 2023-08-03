@@ -11,6 +11,6 @@ import java.util.List;
 @FeignClient("gulimall-search")
 public interface SearchFeignService {
 
-    @PostMapping("/search/save/prodict")
+    @PostMapping("/search/save/product")
     public R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels);
 }
